@@ -12,7 +12,9 @@ function main() {
     warning_save();
     SV.finish();
 }
-function warning_save(){
-    SV.showMessageBox("auto loudness by vibrato: WARNING", "This script may override your own loudness parameters!\nPlease save or backup the project file in advance!");
+function warning_save() {
+    SV.showMessageBox("auto loudness by vibrato: WARNING",
+        "This script may override your own loudness parameters!\n\
+         Please save or backup the project file in advance!");
     SV.finish();
 }
