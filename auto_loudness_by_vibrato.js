@@ -1,6 +1,8 @@
+var SCRIPT_TITLE = "auto loudness by vibrato";
+
 function getClientInfo() {
     return {
-        "name": SV.T("auto loudness by vibrato"),
+        "name": SV.T(SCRIPT_TITLE),
         "category": "tool",
         "author": "Rin von Rheinhauss",
         "versionNumber": 1,
@@ -29,16 +31,17 @@ function getTranslations(langCode) {
     }
     return [];
 }
-
-function main() {
-    warning_save();
-    SV.finish();
-}
 function warning_save() {
-    SV.showMessageBox(
+    var result = SV.showOkCancelBox(
         SV.T("auto loudness by vibrato: WARNING"),
         SV.T("This script may override your own loudness parameters!") + "\n"
         + SV.T("Please save or backup the project file in advance!")
     );
+    return result;
+}
+function main() {
+    if (warning_save() == false) { SV.finish() };
+
     SV.finish();
 }
+
