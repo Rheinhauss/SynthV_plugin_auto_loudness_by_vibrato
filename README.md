@@ -13,3 +13,7 @@ Select notes which u want this script to process, and click `Scripts -> tool -> 
 ## 用法
 
 选取（可多选）你想让本插件处理的音符，点击`脚本 -> tool -> 根据颤音设置响度`，设置合适的参数，然后执行。
+
+## 注意
+
+不支持在音符内部有bpm改变的情况
