@@ -22,6 +22,9 @@ function getTranslations(langCode) {
             ["This script may override your own loudness parameters!", "本脚本可能会覆盖您的响度参数！"],
             ["Press OK to proceed, Cancel to cancel.", "点击确认以继续，或取消以取消。"],
 
+            // alert_no_note_selected()
+            ["No note is selected. This script will not execute.", "没有选择音符，因此脚本并不会执行。"],
+
             // main()
             ["Notice", "注意"],
             ["There is some point that over 12dB which involves in something like 'Clipping distortion' in parameter panel.",
@@ -47,6 +50,13 @@ function warning_save() {
         + SV.T("Press OK to proceed, Cancel to cancel.")
     );
     return result;
+}
+function alert_no_note_selected() {
+    SV.showMessageBox(
+        SV.T("auto loudness by vibrato: WARNING"),
+        SV.T("No note is selected. This script will not execute.")
+    );
+    SV.finish();
 }
 
 function modify_loudness(option) {
@@ -80,7 +90,7 @@ function modify_loudness(option) {
     var selectedNotes = selection.getSelectedNotes();
 
     if (selectedNotes.length == 0)
-        return;
+        alert_no_note_selected();
     selectedNotes.sort(function (noteA, noteB) {
         return noteA.getOnset() - noteB.getOnset();
     });
