@@ -33,6 +33,7 @@ function getTranslations(langCode) {
             ["overwrite", "覆盖"],
             ["add", "叠加"],
             ["untouched", "全都不动"],
+            ["simplify the curve", "简化参数曲线"],
             [" notes edited.", " 个音符已修改。"]
         ];
     }
@@ -153,8 +154,12 @@ function modify_loudness(option) {
             if (v > 12) { v = 12; flagOverPeakWarning = true; }
             loudness.add(b, v);
         }
+        if (option.simp) loudness.simplify(n.start, n.end, 0.001);
     }
-    //loudness.simplify(n.start, n.end, 0.0005);
+    /* if (option.simp) {
+        loudness.simplify(selectedNotes[0].start, selectedNotes[num_notes].end, 0.001);
+        test();
+    } */
     return {
         "flagOverPeakWarning": flagOverPeakWarning,
         "num_processed": num_notes
@@ -194,6 +199,11 @@ function main() {
                 "choices": [SV.T("untouched"),/* SV.T("conserve"), */ SV.T("add"), SV.T("overwrite")],
                 "default": 0
             },
+            {
+                "name": "simp", "type": "CheckBox",
+                "text": SV.T("simplify the curve"),
+                "default": true
+            },
         ]
     };
     var result = SV.showCustomDialog(form);
@@ -201,8 +211,8 @@ function main() {
         var option = {
             "density": result.answers.density,
             "strength": result.answers.strength,
-            "mode": result.answers.mode
-            // TODO: simplify option
+            "mode": result.answers.mode,
+            "simp": result.answers.simp
         };
         var r = modify_loudness(option);
         if (r.flagOverPeakWarning) {
