@@ -48,6 +48,26 @@ function warning_save() {
 }
 
 function modify_loudness(option) {
+    var co_old = 0, co_new = 0;
+    switch (option.mode) { // SV.T("conserve"), SV.T("add"), SV.T("overwrite")
+        case 0:
+            co_old = 1;
+            co_new = 0;
+            break;
+        case 1:
+            co_old = 1;
+            co_new = 1;
+            break;
+        case 2:
+            co_old = 0;
+            co_new = 1;
+            break;
+        default:
+            co_old = 1;
+            co_new = 0;
+            break;
+    }
+
     var selection = SV.getMainEditor().getSelection();
     var selectedNotes = selection.getSelectedNotes();
 
@@ -57,7 +77,7 @@ function modify_loudness(option) {
         return noteA.getOnset() - noteB.getOnset();
     });
 
-    var num_processed = 0;
+    var num_notes = selectedNotes.length;
     var flagOverPeakWarning = false;
     var step = Math.floor(SV.QUARTER / option.density);
     var loudness = SV.getMainEditor().getCurrentGroup().getTarget().getParameter("loudness");
@@ -70,8 +90,7 @@ function modify_loudness(option) {
     if (attrDefault.dF0Vbr === undefined) attrDefault.dF0Vbr = 1;
     if (attrDefault.fF0Vbr === undefined) attrDefault.fF0Vbr = 5.50;
 
-    for (var i = 0; i < selectedNotes.length; i++) {
-        num_processed++;
+    for (var i = 0; i < num_notes; i++) {
         var n = {
             "attr": selectedNotes[i].getAttributes(),
             "start": selectedNotes[i].getOnset(),
@@ -103,14 +122,18 @@ function modify_loudness(option) {
 
             var lScale_1 = vibratoEnv.get(b); // 颤音包络 vibratoEnv
             var lScale_2 = 0; // 音符属性 note properties
-
             if (b >= pb[0] && b <= pb[1]) lScale_2 = 0;
             else if (b > pb[1] && b <= pb[2]) lScale_2 = (b - pb[1]) / (pb[2] - pb[1]);
             else if (b > pb[2] && b <= pb[3]) lScale_2 = 1;
             else if (b > pb[3] && b <= pb[4]) lScale_2 = -(b - pb[4]) / (pb[4] - pb[3]);
             else lScale_2 = 0;
-
-            var v = Math.sin(2 * Math.PI * n.attr.fF0Vbr * (s - n.attr.tF0VbrStart) + n.attr.pF0Vbr)
+            if (option.mode == 0) {
+                var t = loudness.get(b);
+                if(Math.abs(b)<0.01){
+                    continue;
+                }
+            }
+            var v = co_old * loudness + co_new * Math.sin(2 * Math.PI * n.attr.fF0Vbr * (s - n.attr.tF0VbrStart) + n.attr.pF0Vbr)
                 * lScale_1 * lScale_2 * option.strength;
             if (v > 12) { v = 12; flagOverPeakWarning = true; }
             loudness.add(b, v);
@@ -118,7 +141,7 @@ function modify_loudness(option) {
     }
     return {
         "flagOverPeakWarning": flagOverPeakWarning,
-        "num_processed": num_processed
+        "num_processed": num_notes
     };
 }
 function main() {
@@ -152,7 +175,7 @@ function main() {
             {
                 "name": "mode", "type": "ComboBox",
                 "label": SV.T("mode"),
-                "choices": [/* SV.T("conserve"), SV.T("add"),  */SV.T("overwrite")],
+                "choices": [SV.T("conserve"), SV.T("add"), SV.T("overwrite")],
                 "default": 0
             },
         ]
