@@ -32,6 +32,7 @@ function getTranslations(langCode) {
             ["conserve", "保守"],
             ["overwrite", "覆盖"],
             ["add", "叠加"],
+            ["untouched", "全都不动"],
             [" notes edited.", " 个音符已修改。"]
         ];
     }
@@ -49,10 +50,16 @@ function warning_save() {
 
 function modify_loudness(option) {
     var co_old = 0, co_new = 0;
+    var flagOverPeakWarning = false;
+
     switch (option.mode) { // SV.T("conserve"), SV.T("add"), SV.T("overwrite")
         case 0:
-            co_old = 1;
-            co_new = 0;
+            /* co_old = 1;
+            co_new = 0; */
+            return {
+                "flagOverPeakWarning": flagOverPeakWarning,
+                "num_processed": 0
+            }
             break;
         case 1:
             co_old = 1;
@@ -78,9 +85,9 @@ function modify_loudness(option) {
     });
 
     var num_notes = selectedNotes.length;
-    var flagOverPeakWarning = false;
     var step = Math.floor(SV.QUARTER / option.density);
     var loudness = SV.getMainEditor().getCurrentGroup().getTarget().getParameter("loudness");
+    var loudnesscopy = loudness.clone();
     var vibratoEnv = SV.getMainEditor().getCurrentGroup().getTarget().getParameter("vibratoEnv");
     var attrDefault = SV.getMainEditor().getCurrentGroup().getVoice();
 
@@ -97,7 +104,9 @@ function modify_loudness(option) {
             "end": selectedNotes[i].getEnd(),
             "duration": selectedNotes[i].getDuration(),
         };
-
+        if (option.mode == 2) {
+            loudness.remove(n.start, n.end);
+        }
         if (isNaN(n.attr.tF0VbrStart)) n.attr.tF0VbrStart = attrDefault.tF0VbrStart;
         if (isNaN(n.attr.tF0VbrLeft)) n.attr.tF0VbrLeft = attrDefault.tF0VbrLeft;
         if (isNaN(n.attr.tF0VbrRight)) n.attr.tF0VbrRight = attrDefault.tF0VbrRight;
@@ -119,26 +128,33 @@ function modify_loudness(option) {
 
         for (var b = pb[0]; b < pb[4]; b += step) {
             s = SV.blick2Seconds(b - pb[0], bpm);
+            var t = loudnesscopy.get(b);
 
             var lScale_1 = vibratoEnv.get(b); // 颤音包络 vibratoEnv
             var lScale_2 = 0; // 音符属性 note properties
+
             if (b >= pb[0] && b <= pb[1]) lScale_2 = 0;
             else if (b > pb[1] && b <= pb[2]) lScale_2 = (b - pb[1]) / (pb[2] - pb[1]);
             else if (b > pb[2] && b <= pb[3]) lScale_2 = 1;
             else if (b > pb[3] && b <= pb[4]) lScale_2 = -(b - pb[4]) / (pb[4] - pb[3]);
             else lScale_2 = 0;
-            if (option.mode == 0) {
-                var t = loudness.get(b);
-                if(Math.abs(b)<0.01){
+
+            /* if (option.mode == 0) {
+                //if(t.isNaN())
+                    t = 0;
+                if(Math.abs(t) > 0.01){
                     continue;
                 }
-            }
-            var v = co_old * loudness + co_new * Math.sin(2 * Math.PI * n.attr.fF0Vbr * (s - n.attr.tF0VbrStart) + n.attr.pF0Vbr)
+            } */
+            if (co_old != 1 && co_old != 0)
+                testt(co_old);
+            var v = co_old * t + co_new * Math.sin(2 * Math.PI * n.attr.fF0Vbr * (s - n.attr.tF0VbrStart) + n.attr.pF0Vbr)
                 * lScale_1 * lScale_2 * option.strength;
             if (v > 12) { v = 12; flagOverPeakWarning = true; }
             loudness.add(b, v);
         }
     }
+    //loudness.simplify(n.start, n.end, 0.0005);
     return {
         "flagOverPeakWarning": flagOverPeakWarning,
         "num_processed": num_notes
@@ -175,7 +191,7 @@ function main() {
             {
                 "name": "mode", "type": "ComboBox",
                 "label": SV.T("mode"),
-                "choices": [SV.T("conserve"), SV.T("add"), SV.T("overwrite")],
+                "choices": [SV.T("untouched"),/* SV.T("conserve"), */ SV.T("add"), SV.T("overwrite")],
                 "default": 0
             },
         ]
@@ -186,6 +202,7 @@ function main() {
             "density": result.answers.density,
             "strength": result.answers.strength,
             "mode": result.answers.mode
+            // TODO: simplify option
         };
         var r = modify_loudness(option);
         if (r.flagOverPeakWarning) {
@@ -203,7 +220,10 @@ function main() {
 
 
 function testt(m) {
-    SV.showMessageBox((1111111).toString(), m.toString());
+    var result = SV.showOkCancelBox((1111111).toString(), m.toString());
+    if (0 == result) {
+        SV.finish();
+    }
 }
 function test() {
     SV.showMessageBox((debug_count++).toString(), "");
