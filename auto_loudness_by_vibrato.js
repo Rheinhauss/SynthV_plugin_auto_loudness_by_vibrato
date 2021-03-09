@@ -6,7 +6,7 @@ function getClientInfo() {
         "name": SV.T(SCRIPT_TITLE),
         "category": "tool",
         "author": "Rin von Rheinhauss",
-        "versionNumber": 1,
+        "versionNumber": 2,
         "minEditorVersion": 66049
     };
 }
