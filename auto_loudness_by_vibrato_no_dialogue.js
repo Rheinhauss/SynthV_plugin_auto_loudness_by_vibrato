@@ -1,5 +1,16 @@
-var SCRIPT_TITLE = "auto loudness by vibrato";
+var SCRIPT_TITLE = "auto loudness by vibrato without dialogue";
 var debug_count = 0;
+
+
+// Modify parameters here and then reload scripts
+var option = {
+    "density": 20,      //points per quarter. recommended value: [4, 256]
+    "strength": 2,      //variation strength of loudness. recommended value: [0, 6]
+    "mode": 0,          //add: 0, overwrite: 1
+    "simp": true        //simplify control points
+};
+
+
 
 function getClientInfo() {
     return {
@@ -14,7 +25,7 @@ function getTranslations(langCode) {
     if (langCode == "zh-cn") {
         return [
             // getClientInfo()
-            ["auto loudness by vibrato", "根据颤音设置响度"],
+            ["auto loudness by vibrato without dialogue", "根据颤音设置响度（无对话框）"],
 
             // warning_save()
             ["auto loudness by vibrato: WARNING", "根据颤音设置响度：警告"],
@@ -158,63 +169,16 @@ function modify_loudness(option) {
 function main() {
     if (warning_save() == false) { SV.finish(); return; };
     // custom dialog
-    var form = {
-        title: SV.T(SCRIPT_TITLE),
-        message: "",
-        buttons: "OkCancel",
-        widgets: [
-            {
-                "name": "strength",
-                "type": "Slider",
-                "label": SV.T("Strength(dB)"),
-                "format": "%1.2f",
-                "minValue": 0,
-                "maxValue": 6,
-                "interval": 0.05,
-                "default": 1
-            },
-            {
-                "name": "density",
-                "type": "Slider",
-                "label": SV.T("Points per quarter"),
-                "format": "%3.0f",
-                "minValue": 4,
-                "maxValue": 256,
-                "interval": 1,
-                "default": 32
-            },
-            {
-                "name": "mode", "type": "ComboBox",
-                "label": SV.T("mode"),
-                "choices": [SV.T("add"), SV.T("overwrite")],
-                "default": 0
-            },
-            {
-                "name": "simp", "type": "CheckBox",
-                "text": SV.T("simplify the curve"),
-                "default": true
-            }
-        ]
-    };
 
-    var result = SV.showCustomDialog(form);
-    if (result.status) {
-        var option = {
-            "density": result.answers.density,
-            "strength": result.answers.strength,
-            "mode": result.answers.mode,
-            "simp": result.answers.simp
-        };
-        var r = modify_loudness(option);
-        if (r.flagOverPeakWarning) {
-            SV.showMessageBox(SCRIPT_TITLE + "    ",
-                SV.T("There is some point that over 12dB which involves in something like 'Clipping distortion' in parameter panel.") + "\n"
-                + r.num_processed.toString() + SV.T(" notes edited."));
-        }
-        else {
-            SV.showMessageBox(SCRIPT_TITLE + "    ", r.num_processed.toString() + SV.T(" notes edited."));
-        }
-
+    var r = modify_loudness(option);
+    if (r.flagOverPeakWarning) {
+        SV.showMessageBox(SCRIPT_TITLE + "    ",
+            SV.T("There is some point that over 12dB which involves in something like 'Clipping distortion' in parameter panel.") + "\n"
+            + r.num_processed.toString() + SV.T(" notes edited."));
     }
+    else {
+        SV.showMessageBox(SCRIPT_TITLE + "    ", r.num_processed.toString() + SV.T(" notes edited."));
+    }
+
     SV.finish();
 }
