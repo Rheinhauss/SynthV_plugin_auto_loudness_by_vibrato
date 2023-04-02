@@ -126,7 +126,7 @@ function modify_loudness(option) {
             n.end
         ];
 
-        for (var b = pb[0]; b < pb[4]; b += step) {
+        for (var b = pb[0]; b <= pb[4]; b += step) {
             s = SV.blick2Seconds(b - pb[0], bpm);
             var t = loudnesscopy.get(b);
 
