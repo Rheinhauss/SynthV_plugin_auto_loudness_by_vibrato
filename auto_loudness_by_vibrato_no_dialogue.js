@@ -4,8 +4,8 @@ var debug_count = 0;
 
 // Modify parameters here and then reload scripts
 var option = {
-    "density": 20,      //points per quarter. recommended value: [4, 256]
-    "strength": 2,      //variation strength of loudness. recommended value: [0, 6]
+    "density": 32,      //points per quarter. recommended value: [4, 256]
+    "strength": 1.5,      //variation strength of loudness. recommended value: [0, 6]
     "mode": 0,          //add: 0, overwrite: 1
     "simp": true        //simplify control points
 };
@@ -137,7 +137,7 @@ function modify_loudness(option) {
             n.end
         ];
 
-        for (var b = pb[0]; b < pb[4]; b += step) {
+        for (var b = pb[0]; b <= pb[4]; b += step) {
             s = SV.blick2Seconds(b - pb[0], bpm);
             var t = loudnesscopy.get(b);
 
